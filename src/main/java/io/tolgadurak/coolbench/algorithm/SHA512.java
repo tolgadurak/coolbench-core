@@ -2,11 +2,8 @@ package io.tolgadurak.coolbench.algorithm;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.logging.log4j.LogManager;
@@ -22,11 +19,10 @@ public class SHA512 implements BenchmarkAlgorithm {
 	 * The SHA-512 hash algorithm defined in the FIPS PUB 180-2.
 	 */
 	private static final String SHA_512 = "SHA-512";
-	private Queue<Future<?>> futureQueue = new ConcurrentLinkedQueue<>();
 
 	@Override
 	public boolean run(int taskCount, int nThreads, Timeout timeout) throws InterruptedException, TimeoutException {
-		if(taskCount % nThreads != 0) {
+		if (taskCount % nThreads != 0) {
 			throw new IllegalArgumentException("Task count must be real product of threads");
 		}
 		boolean doneWithinTimeout = false;
@@ -40,7 +36,6 @@ public class SHA512 implements BenchmarkAlgorithm {
 		try {
 			doneWithinTimeout = executorService.awaitTermination(timeout.getValue(), timeout.getUnit());
 			if (!doneWithinTimeout) {
-				cancelAllTasks();
 				executorService.shutdownNow(); // Force all executing tasks to stop
 				throw new TimeoutException();
 			}
@@ -49,13 +44,6 @@ public class SHA512 implements BenchmarkAlgorithm {
 			throw e;
 		}
 		return doneWithinTimeout;
-	}
-
-	private void cancelAllTasks() {
-		while (!futureQueue.isEmpty()) {
-			Future<?> future = futureQueue.poll();
-			future.cancel(true);
-		}
 	}
 
 	private Timeout setTimeout(Timeout timeout) {
@@ -68,8 +56,7 @@ public class SHA512 implements BenchmarkAlgorithm {
 	private void submitThreads(ExecutorService executorService, int nThreads, int hashCountPerTask) {
 		for (int i = 0; i < nThreads; i++) {
 			SHA512Task task = new SHA512Task(hashCountPerTask);
-			Future<?> future = executorService.submit(task);
-			futureQueue.add(future);
+			executorService.submit(task);
 		}
 	}
 
