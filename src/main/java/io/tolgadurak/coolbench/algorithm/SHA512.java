@@ -4,6 +4,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.logging.log4j.LogManager;
@@ -21,27 +22,34 @@ public class SHA512 implements BenchmarkAlgorithm {
 	private static final String SHA_512 = "SHA-512";
 
 	@Override
-	public boolean run(int taskCount, int nThreads, Timeout timeout) throws InterruptedException, TimeoutException {
-		if (taskCount % nThreads != 0) {
-			throw new IllegalArgumentException("Task count must be real product of threads");
+	public boolean run(int hashCount, int nTask, Timeout timeout) throws InterruptedException, TimeoutException {
+		return handleTasks(hashCount, nTask, timeout, false);
+	}
+
+	private boolean handleTasks(int nHash, int nTask, Timeout timeout, boolean isAsync)
+			throws TimeoutException, InterruptedException {
+		if (nHash % nTask != 0) {
+			throw new IllegalArgumentException("Hash count must be real product of n task");
 		}
 		boolean doneWithinTimeout = false;
 		timeout = setTimeout(timeout);
-		ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
-		int hashCountPerTask = taskCount / nThreads;
-		logger.debug("Task count: " + taskCount);
-		logger.debug("Task count per thread: " + hashCountPerTask);
-		submitThreads(executorService, nThreads, hashCountPerTask);
+		ExecutorService executorService = Executors.newFixedThreadPool(nTask);
+		int hashCountPerTask = nHash / nTask;
+		logger.debug("Hash count: " + nHash);
+		logger.debug("Hash count per task: " + hashCountPerTask);
+		submitTasks(executorService, nTask, hashCountPerTask);
 		executorService.shutdown();
-		try {
-			doneWithinTimeout = executorService.awaitTermination(timeout.getValue(), timeout.getUnit());
-			if (!doneWithinTimeout) {
-				executorService.shutdownNow(); // Force all executing tasks to stop
-				throw new TimeoutException();
+		if (!isAsync) {
+			try {
+				doneWithinTimeout = executorService.awaitTermination(timeout.getValue(), timeout.getUnit());
+				if (!doneWithinTimeout) {
+					executorService.shutdownNow(); // Force all executing tasks to stop
+					throw new TimeoutException();
+				}
+			} catch (InterruptedException e) {
+				logger.error("Error while performing benchmark with " + nTask + " tasks", e);
+				throw e;
 			}
-		} catch (InterruptedException e) {
-			logger.error("Error while performing benchmark with " + nThreads + " threads", e);
-			throw e;
 		}
 		return doneWithinTimeout;
 	}
@@ -53,8 +61,8 @@ public class SHA512 implements BenchmarkAlgorithm {
 		return timeout;
 	}
 
-	private void submitThreads(ExecutorService executorService, int nThreads, int hashCountPerTask) {
-		for (int i = 0; i < nThreads; i++) {
+	private void submitTasks(ExecutorService executorService, int nTask, int hashCountPerTask) {
+		for (int i = 0; i < nTask; i++) {
 			SHA512Task task = new SHA512Task(hashCountPerTask);
 			executorService.submit(task);
 		}
@@ -77,6 +85,18 @@ public class SHA512 implements BenchmarkAlgorithm {
 		}
 		logger.debug("Hashing task has been completed succesfully");
 		return hash;
+	}
+
+	@Override
+	public void runAsync(int taskCount, int nThreads) throws InterruptedException {
+		try {
+			handleTasks(taskCount, nThreads, Timeout.getInstance(0, TimeUnit.NANOSECONDS), true);
+		} catch (InterruptedException e) {
+			logger.error("Error while performing benchmark with " + nThreads + " threads", e);
+			throw e;
+		} catch (TimeoutException e) {
+			logger.debug("Async algorithm is being run");
+		}
 	}
 
 }
