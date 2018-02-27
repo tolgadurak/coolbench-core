@@ -11,10 +11,10 @@ public interface BenchmarkAlgorithm {
 	/**
 	 * Runs dedicated benchmark algorithm
 	 * 
-	 * @param nHash
+	 * @param nTimes
 	 *            the count that specifies how many times algorithm to be executed
-	 * @param nTasks
-	 *            n new task to be submitted to calculate n hash
+	 * @param nThreads
+	 *            n new threads to perform n times execution of algorithm in parallel
 	 * @param timeout
 	 *            it guarantees the execution of the tasks to be sync with current
 	 *            thread. If timeout elapsed, throw TimeoutExeption. In other words,
@@ -24,17 +24,17 @@ public interface BenchmarkAlgorithm {
 	 * @throws TimeoutException
 	 *             this method throws if timeout elapsed during execution
 	 */
-	boolean run(int nHash, int nTasks, Timeout timeout) throws InterruptedException, TimeoutException;
+	boolean run(int nTimes, int nThreads, Timeout timeout) throws InterruptedException, TimeoutException;
 
 	/**
 	 * Runs dedicated benchmark algorithm asynchronously
 	 * 
-	 * @param taskCount
+	 * @param nTimes
 	 *            the count that specifies how many times algorithm to be executed
 	 * @param nThreads
-	 *            n new threads to be associated with the task
+	 *            n new threads to perform n times execution of algorithm in parallel
 	 */
-	void runAsync(int taskCount, int nThreads) throws InterruptedException;
+	void runAsync(int nTimes, int nThreads) throws InterruptedException;
 
 	public static BenchmarkAlgorithm getInstance(String algorithm) {
 		if (StringUtils.equals("SHA-512", algorithm)) {
