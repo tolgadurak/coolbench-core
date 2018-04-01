@@ -36,6 +36,12 @@ public interface BenchmarkAlgorithm {
 	 */
 	void runAsync(int nTimes, int nThreads) throws InterruptedException;
 
+	/**
+	 * Returns algorithm name of the instance
+	 * @return algorithm name
+	 */
+	String getName();
+
 	public static BenchmarkAlgorithm getInstance(String algorithm) {
 		if (StringUtils.equals("SHA-512", algorithm)) {
 			return new SHA512();

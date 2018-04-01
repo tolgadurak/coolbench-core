@@ -99,4 +99,8 @@ public class SHA512 implements BenchmarkAlgorithm {
 		}
 	}
 
+	@Override
+	public String getName() {
+		return SHA_512;
+	}
 }
