@@ -1,18 +1,15 @@
 package io.tolgadurak.coolbench.wrapper;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import io.tolgadurak.coolbench.algorithm.BenchmarkAlgorithm;
-
-@JsonRootName(value = "coolbenchResult")
 public class CoolbenchResult {
 	private int score;
 	private int nTimes;
 	private int nThreads;
-	private BenchmarkAlgorithm algorithm;
+	private String algorithmName;
+	private String javaVersion;
 
 	public int getScore() {
 		return score;
@@ -26,14 +23,17 @@ public class CoolbenchResult {
 		return nThreads;
 	}
 
-	public BenchmarkAlgorithm getAlgorithm() {
-		return algorithm;
+	public String getJavaVersion() {
+		return javaVersion;
+	}
+
+	public String getAlgorithmName() {
+		return algorithmName;
 	}
 
 	public String toJson() throws JsonProcessingException {
 		ObjectMapper objectMapper = new ObjectMapper();
 		objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-		objectMapper.configure(SerializationFeature.WRAP_ROOT_VALUE, true);
 		return objectMapper.writeValueAsString(this);
 	}
 
@@ -47,14 +47,15 @@ public class CoolbenchResult {
 		this.score = builder.score;
 		this.nTimes = builder.nTimes;
 		this.nThreads = builder.nThreads;
-		this.algorithm = builder.algorithm;
+		this.javaVersion = System.getProperty("java.version");
+		this.algorithmName = builder.algorithmName;
 	}
 
 	public static class Builder {
 		private int score;
 		private int nTimes;
 		private int nThreads;
-		private BenchmarkAlgorithm algorithm;
+		private String algorithmName;
 
 		public Builder score(int score) {
 			this.score = score;
@@ -71,8 +72,8 @@ public class CoolbenchResult {
 			return this;
 		}
 
-		public Builder algorithm(BenchmarkAlgorithm algorithm) {
-			this.algorithm = algorithm;
+		public Builder algorithmName(String algorithmName) {
+			this.algorithmName = algorithmName;
 			return this;
 		}
 

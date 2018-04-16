@@ -38,7 +38,7 @@ public class CoolbenchPerformanceCounter {
 	}
 
 	private CoolbenchResult buildCoolbenchResult(int score, int nTimes, int nThreads, BenchmarkAlgorithm algorithm) {
-		return new CoolbenchResult.Builder().score(score).nTimes(nTimes).nThreads(nThreads).algorithm(algorithm)
-				.build();
+		return new CoolbenchResult.Builder().score(score).nTimes(nTimes).nThreads(nThreads)
+				.algorithmName(algorithm.getName()).build();
 	}
 }
